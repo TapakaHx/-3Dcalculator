@@ -5,14 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import {
-  FilePlus2,
-  FolderPlus,
-  Layers,
-  Trash2,
-  Copy,
-  AlertTriangle
-} from "lucide-react";
+import { FilePlus2, FolderPlus, Trash2, Copy, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StlViewer } from "@/components/stl-viewer";
 import { calcCosts, calcPricing } from "@/lib/calc";
+import { AppShell } from "@/components/app-shell";
 
 const projectSchema = z.object({
   title: z.string().min(1),
@@ -113,6 +107,9 @@ export default function ProjectsPage() {
   } | null>(null);
   const [stlFile, setStlFile] = useState<File | null>(null);
   const stlFallbackTimer = useRef<NodeJS.Timeout | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle"
+  );
 
   const saveTimer = useRef<NodeJS.Timeout | null>(null);
   const skipAutoSave = useRef(true);
@@ -192,6 +189,7 @@ export default function ProjectsPage() {
       const result = projectSchema.safeParse(values);
       if (!result.success) return;
 
+      setSaveStatus("saving");
       await fetch(`/api/projects/${selectedId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -200,7 +198,9 @@ export default function ProjectsPage() {
           date: new Date(result.data.date).toISOString()
         })
       });
+      setSaveStatus("saved");
       toast.success("Project saved");
+      setTimeout(() => setSaveStatus("idle"), 2000);
       refreshList();
     }, 800);
 
@@ -368,70 +368,82 @@ export default function ProjectsPage() {
   }, [values.printTimeHours]);
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-72 border-r border-slate-200 bg-white p-4">
-        <div className="flex items-center gap-2 text-lg font-semibold">
-          <Layers className="h-5 w-5" /> 3D Print Cost Calculator
-        </div>
-        <div className="mt-4 flex gap-2">
-          <Input
-            placeholder="Search project..."
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <Button size="icon" variant="secondary" onClick={handleNew}>
-            <FolderPlus className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="mt-4 space-y-2">
-          {filteredProjects.map((project) => (
-            <button
-              key={project.id}
-              onClick={() => setSelectedId(project.id)}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                selectedId === project.id
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 hover:bg-slate-200"
-              }`}
-            >
-              <div className="font-medium">{project.title}</div>
-              <div className="text-xs text-slate-500">
-                {new Date(project.date).toLocaleDateString("uk-UA")}
+    <AppShell
+      title="Projects"
+      description="Auto-save enabled · changes persist every 800ms."
+    >
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <aside className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+            Project list
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Input
+              placeholder="Search project..."
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <Button size="icon" variant="secondary" onClick={handleNew}>
+              <FolderPlus className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="mt-4 space-y-2">
+            {filteredProjects.map((project) => (
+              <button
+                key={project.id}
+                onClick={() => setSelectedId(project.id)}
+                className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                  selectedId === project.id
+                    ? "bg-slate-900 text-white"
+                    : "bg-slate-100 hover:bg-slate-200"
+                }`}
+              >
+                <div className="font-medium">{project.title}</div>
+                <div className="text-xs text-slate-500">
+                  {new Date(project.date).toLocaleDateString("uk-UA")}
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="text-sm text-slate-500">Active project</div>
+              <div className="text-lg font-semibold text-slate-900">
+                {values.title || "Untitled"}
               </div>
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      <main className="flex-1 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Projects</h1>
-            <p className="text-sm text-slate-500">
-              Auto-save is enabled. Changes persist every 800ms.
-            </p>
+              <div className="text-xs text-slate-500">
+                Status:{" "}
+                {saveStatus === "saving"
+                  ? "Saving..."
+                  : saveStatus === "saved"
+                    ? "Saved"
+                    : "Idle"}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="secondary" onClick={handleNew}>
+                <FilePlus2 className="mr-2 h-4 w-4" /> New project
+              </Button>
+              <Button variant="outline" onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicate
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </Button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={handleNew}>
-              <FilePlus2 className="mr-2 h-4 w-4" /> New project
-            </Button>
-            <Button variant="outline" onClick={handleDuplicate}>
-              <Copy className="mr-2 h-4 w-4" /> Duplicate
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </Button>
-          </div>
-        </div>
 
-        {warningMissing && (
-          <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
-            <AlertTriangle className="h-4 w-4" /> {warningMissing}
-          </div>
-        )}
+          {warningMissing && (
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              <AlertTriangle className="h-4 w-4" /> {warningMissing}
+            </div>
+          )}
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>General</CardTitle>
@@ -475,66 +487,7 @@ export default function ProjectsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>STL</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Input
-                    type="file"
-                    accept=".stl"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (!file) return;
-                      const url = URL.createObjectURL(file);
-                      setStlPreviewUrl(url);
-                      setPendingDimensions(null);
-                      setStlFile(file);
-                    }}
-                  />
-                  {values.stlPath && (
-                    <span className="text-sm text-slate-500">
-                      Stored: {values.stlPath}
-                    </span>
-                  )}
-                </div>
-                {stlPreviewUrl ? (
-                  <StlViewer
-                    url={stlPreviewUrl}
-                    onDimensions={(dims) => {
-                      setPendingDimensions(dims);
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-slate-200 text-sm text-slate-400">
-                    Upload STL to preview
-                  </div>
-                )}
-                <div className="grid gap-2 text-sm md:grid-cols-3">
-                  <div>
-                    <Label>X (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                      {values.stlXmm ?? "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Y (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                      {values.stlYmm ?? "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Z (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                      {values.stlZmm ?? "-"}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Printing</CardTitle>
+                <CardTitle>Printing setup</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div>
@@ -671,10 +624,72 @@ export default function ProjectsPage() {
 
             <Card>
               <CardHeader>
+                <CardTitle>STL viewer</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    type="file"
+                    accept=".stl"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const url = URL.createObjectURL(file);
+                      setStlPreviewUrl(url);
+                      setPendingDimensions(null);
+                      setStlFile(file);
+                    }}
+                  />
+                  {values.stlPath && (
+                    <span className="text-sm text-slate-500">
+                      Stored: {values.stlPath}
+                    </span>
+                  )}
+                </div>
+                {stlPreviewUrl ? (
+                  <StlViewer
+                    url={stlPreviewUrl}
+                    onDimensions={(dims) => {
+                      setPendingDimensions(dims);
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-slate-200 text-sm text-slate-400">
+                    Upload STL to preview
+                  </div>
+                )}
+                <div className="grid gap-2 text-sm md:grid-cols-3">
+                  <div>
+                    <Label>X (mm)</Label>
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      {values.stlXmm ?? "-"}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Y (mm)</Label>
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      {values.stlYmm ?? "-"}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Z (mm)</Label>
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                      {values.stlZmm ?? "-"}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <CardTitle>Post-processing</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {metadata?.services.map((service, index) => {
+                {metadata?.services.map((service) => {
+                  const index = values.services.findIndex(
+                    (item) => item.serviceId === service.id
+                  );
                   const selected = values.services[index];
                   return (
                     <div
@@ -685,7 +700,10 @@ export default function ProjectsPage() {
                         <Checkbox
                           checked={selected?.selected ?? false}
                           onChange={(event) =>
-                            form.setValue(`services.${index}.selected`, event.target.checked)
+                            form.setValue(
+                              `services.${index}.selected`,
+                              event.target.checked
+                            )
                           }
                         />
                         {service.name}
@@ -767,90 +785,85 @@ export default function ProjectsPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
+            </div>
 
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Results</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span>Electricity</span>
-                  <span>
-                    {costs.electricityKwh} kWh · {Math.round(costs.electricityCost)} грн
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Material</span>
-                  <span>{Math.round(costs.materialCost)} грн</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Labor</span>
-                  <span>{Math.round(costs.laborCost)} грн</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Fixed services</span>
-                  <span>{Math.round(costs.fixedServicesCost)} грн</span>
-                </div>
-                {values.includePrinterAmort && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
                   <div className="flex items-center justify-between">
-                    <span>Printer amort</span>
-                    <span>{Math.round(costs.printerAmortCost)} грн</span>
+                    <span>Electricity</span>
+                    <span>
+                      {costs.electricityKwh} kWh · {Math.round(costs.electricityCost)} грн
+                    </span>
                   </div>
-                )}
-                {values.includePrinterService && (
                   <div className="flex items-center justify-between">
-                    <span>Printer service</span>
-                    <span>{Math.round(costs.printerServiceCost)} грн</span>
+                    <span>Material</span>
+                    <span>{Math.round(costs.materialCost)} грн</span>
                   </div>
-                )}
-                <div className="flex items-center justify-between font-semibold">
-                  <span>Post-processing total</span>
-                  <span>{Math.round(costs.postCost)} грн</span>
-                </div>
-                <div className="flex items-center justify-between text-base font-semibold">
-                  <span>COGS</span>
-                  <span>{Math.round(costs.cogs)} грн</span>
-                </div>
-                <div className="h-px bg-slate-200" />
-                <div className="flex items-center justify-between">
-                  <span>Sale price</span>
-                  <span>{Math.round(pricing.salePrice)} грн</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Profit</span>
-                  <span>{Math.round(pricing.profit)} грн</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Margin %</span>
-                  <span>{pricing.marginPercent.toFixed(1)}%</span>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex items-center justify-between">
+                    <span>Labor</span>
+                    <span>{Math.round(costs.laborCost)} грн</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Fixed services</span>
+                    <span>{Math.round(costs.fixedServicesCost)} грн</span>
+                  </div>
+                  {values.includePrinterAmort && (
+                    <div className="flex items-center justify-between">
+                      <span>Printer amort</span>
+                      <span>{Math.round(costs.printerAmortCost)} грн</span>
+                    </div>
+                  )}
+                  {values.includePrinterService && (
+                    <div className="flex items-center justify-between">
+                      <span>Printer service</span>
+                      <span>{Math.round(costs.printerServiceCost)} грн</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between font-semibold">
+                    <span>Post-processing total</span>
+                    <span>{Math.round(costs.postCost)} грн</span>
+                  </div>
+                  <div className="flex items-center justify-between text-base font-semibold">
+                    <span>COGS</span>
+                    <span>{Math.round(costs.cogs)} грн</span>
+                  </div>
+                  <div className="h-px bg-slate-200" />
+                  <div className="flex items-center justify-between">
+                    <span>Sale price</span>
+                    <span>{Math.round(pricing.salePrice)} грн</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Profit</span>
+                    <span>{Math.round(pricing.profit)} грн</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Margin %</span>
+                    <span>{pricing.marginPercent.toFixed(1)}%</span>
+                  </div>
+                </CardContent>
+              </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Navigation</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                <a
-                  href="/settings"
-                  className="block rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-100"
-                >
-                  Settings
-                </a>
-                <a
-                  href="/reports"
-                  className="block rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-100"
-                >
-                  Reports
-                </a>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <Button variant="secondary" className="w-full" onClick={handleDuplicate}>
+                    Duplicate project
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={handleNew}>
+                    Create new
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </section>
+      </div>
+    </AppShell>
   );
 }

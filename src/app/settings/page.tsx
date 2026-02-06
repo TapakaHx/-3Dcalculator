@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Save, Trash2 } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AppShell } from "@/components/app-shell";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -100,17 +101,10 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <Button variant="secondary" onClick={() => (window.location.href = "/projects")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <p className="text-sm text-slate-500">Manage defaults and directories.</p>
-        </div>
-      </div>
-
+    <AppShell
+      title="Settings"
+      description="Manage defaults, printers, materials, and services."
+    >
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-1">
           <CardHeader>
@@ -500,6 +494,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AppShell>
   );
 }

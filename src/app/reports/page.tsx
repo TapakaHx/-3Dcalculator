@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calcCosts, calcPricing } from "@/lib/calc";
+import { AppShell } from "@/components/app-shell";
 
 export default function ReportsPage() {
   const [start, setStart] = useState("");
@@ -80,17 +80,10 @@ export default function ReportsPage() {
   }, [projects, settings]);
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <Button variant="secondary" onClick={() => (window.location.href = "/projects")}>
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-        <div>
-          <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="text-sm text-slate-500">Monthly summary by date range.</p>
-        </div>
-      </div>
-
+    <AppShell
+      title="Reports"
+      description="Monthly summary by date range."
+    >
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Filters</CardTitle>
@@ -140,6 +133,6 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AppShell>
   );
 }

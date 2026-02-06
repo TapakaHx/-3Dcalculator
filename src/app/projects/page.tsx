@@ -362,8 +362,9 @@ export default function ProjectsPage() {
   }, [stlFile]);
 
   const [printHours, printMinutes] = useMemo(() => {
-    const hours = Math.floor(values.printTimeHours || 0);
-    const minutes = Math.round((values.printTimeHours - hours) * 60);
+    const totalMinutes = Math.round((values.printTimeHours || 0) * 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
     return [hours, minutes];
   }, [values.printTimeHours]);
 
@@ -686,10 +687,7 @@ export default function ProjectsPage() {
                 <CardTitle>Post-processing</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {metadata?.services.map((service) => {
-                  const index = values.services.findIndex(
-                    (item) => item.serviceId === service.id
-                  );
+                {metadata?.services.map((service, index) => {
                   const selected = values.services[index];
                   return (
                     <div

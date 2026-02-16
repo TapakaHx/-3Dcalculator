@@ -10,10 +10,8 @@
     header{padding:14px 18px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
     .wrap{max-width:1280px;margin:0 auto}
     .row{display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .tabs a{display:inline-block;text-decoration:none;border:1px solid var(--line);color:var(--text);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .tabs a.active{background:var(--brand);color:#fff}
-    .subnav{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-    .subnav a{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:#fff}
+    .tabs button{display:inline-block;border:1px solid var(--line);color:var(--text);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .tabs button.active{background:var(--brand);color:#fff}
     .page{display:none;padding:16px}.page.active{display:block}
     .grid{display:grid;gap:12px}
     .projects-layout{grid-template-columns:280px 1fr}
@@ -43,13 +41,9 @@
     <strong>Калькулятор вартості 3D-друку · UAH</strong>
     <div>
       <div class="tabs">
-        <a data-tab="projects" href="#projects" class="active">Проєкти</a>
-        <a data-tab="settings" href="#settings">Налаштування</a>
-        <a data-tab="reports" href="#reports">Звіти</a>
-      </div>
-      <div class="subnav">
-        <a href="#settings">Пряме посилання: Налаштування</a>
-        <a href="#reports">Пряме посилання: Звіти</a>
+        <button type="button" data-tab="projects" class="active">Проєкти</button>
+        <button type="button" data-tab="settings">Налаштування</button>
+        <button type="button" data-tab="reports">Звіти</button>
       </div>
     </div>
   </div>
@@ -150,10 +144,6 @@
 </div>
 
 <script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js';
-import { STLLoader } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/STLLoader.js';
-
 const defaults = {
   settings: { electricity_uah_per_kwh: 4.32, labor_uah_per_hour: 200 },
   printers: [{id:1,name:'Prusa MK3S+',power_watts:120},{id:2,name:'Bambu P1S',power_watts:80}],
@@ -328,32 +318,56 @@ function renderReport(){
 }
 
 let renderer, scene, camera, controls;
-function initViewer(){
+let THREE_LIB = null;
+let STLLoaderLib = null;
+let OrbitControlsLib = null;
+let viewerReady = false;
+
+async function initViewer(){
   const box=document.getElementById('viewer');
-  scene=new THREE.Scene(); scene.background=new THREE.Color(0xf8fafc);
-  camera=new THREE.PerspectiveCamera(60, box.clientWidth/box.clientHeight,0.1,1000); camera.position.set(120,120,120);
-  renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(box.clientWidth,box.clientHeight); box.innerHTML=''; box.appendChild(renderer.domElement);
-  controls=new OrbitControls(camera, renderer.domElement);
-  scene.add(new THREE.AmbientLight(0xffffff,0.6)); const l=new THREE.DirectionalLight(0xffffff,1); l.position.set(100,100,100); scene.add(l);
-  const tick=()=>{controls.update(); renderer.render(scene,camera); requestAnimationFrame(tick)}; tick();
+  try {
+    const [threeMod, controlsMod, loaderMod] = await Promise.all([
+      import('https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js'),
+      import('https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js'),
+      import('https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/STLLoader.js')
+    ]);
+    THREE_LIB = threeMod;
+    OrbitControlsLib = controlsMod.OrbitControls;
+    STLLoaderLib = loaderMod.STLLoader;
+
+    scene=new THREE_LIB.Scene(); scene.background=new THREE_LIB.Color(0xf8fafc);
+    camera=new THREE_LIB.PerspectiveCamera(60, box.clientWidth/box.clientHeight,0.1,1000); camera.position.set(120,120,120);
+    renderer=new THREE_LIB.WebGLRenderer({antialias:true}); renderer.setSize(box.clientWidth,box.clientHeight); box.innerHTML=''; box.appendChild(renderer.domElement);
+    controls=new OrbitControlsLib(camera, renderer.domElement);
+    scene.add(new THREE_LIB.AmbientLight(0xffffff,0.6)); const l=new THREE_LIB.DirectionalLight(0xffffff,1); l.position.set(100,100,100); scene.add(l);
+    const tick=()=>{controls.update(); renderer.render(scene,camera); requestAnimationFrame(tick)}; tick();
+    viewerReady = true;
+  } catch (error) {
+    box.innerHTML = '<div style="padding:12px;color:#b45309;font-size:12px">3D перегляд тимчасово недоступний (блок CDN). Решта калькулятора працює.</div>';
+    viewerReady = false;
+  }
 }
 
 p_stl.addEventListener('change', async (e)=>{
   const file=e.target.files?.[0]; if(!file) return;
+  if(!viewerReady || !STLLoaderLib || !THREE_LIB){
+    alert('STL перегляд недоступний у цій мережі (CDN заблоковано), але інші розрахунки працюють.');
+    return;
+  }
   const url=URL.createObjectURL(file);
-  const loader=new STLLoader();
+  const loader=new STLLoaderLib();
   loader.load(url,geo=>{
     while(scene.children.length>2) scene.remove(scene.children[2]);
-    const mat=new THREE.MeshStandardMaterial({color:0x64748b});
-    const mesh=new THREE.Mesh(geo,mat); geo.computeBoundingBox();
-    const sz=new THREE.Vector3(); geo.boundingBox.getSize(sz); geo.center(); scene.add(mesh);
+    const mat=new THREE_LIB.MeshStandardMaterial({color:0x64748b});
+    const mesh=new THREE_LIB.Mesh(geo,mat); geo.computeBoundingBox();
+    const sz=new THREE_LIB.Vector3(); geo.boundingBox.getSize(sz); geo.center(); scene.add(mesh);
     const p=cur(); p.dims={x:sz.x,y:sz.y,z:sz.z}; persist(); renderProjectForm();
   });
 });
 
 function renderAll(){ renderProjectList(); renderProjectForm(); renderSettings(); renderReport(); }
 
-bindProjectEvents(); initViewer(); renderAll();
+bindProjectEvents(); renderAll(); initViewer();
 
 function setActiveTab(tab){
   const safe = ['projects','settings','reports'].includes(tab) ? tab : 'projects';
@@ -365,17 +379,12 @@ function setActiveTab(tab){
   if(page) page.classList.add('active');
 }
 
-document.querySelectorAll('[data-tab]').forEach(link=>link.addEventListener('click',()=>{
-  const tab = link.dataset.tab;
+document.querySelectorAll('[data-tab]').forEach(btn=>btn.addEventListener('click',()=>{
+  const tab = btn.dataset.tab;
   setActiveTab(tab);
 }));
 
-window.addEventListener('hashchange',()=>{
-  const tab = (location.hash || '#projects').replace('#','');
-  setActiveTab(tab);
-});
-
-setActiveTab((location.hash || '#projects').replace('#',''));
+setActiveTab('projects');
 </script>
 </body>
 </html>

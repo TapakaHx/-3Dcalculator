@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3D Print Cost Calculator (UAH)</title>
+  <title>Калькулятор вартості 3D-друку (UAH)</title>
   <style>
     :root { --bg:#f8fafc; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#64748b; --brand:#0f172a; }
     *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--text)}
@@ -38,11 +38,11 @@
 <body>
 <header>
   <div class="wrap row">
-    <strong>3D Print Cost Calculator · UAH</strong>
+    <strong>Калькулятор вартості 3D-друку · UAH</strong>
     <div class="tabs">
-      <button data-tab="projects" class="active">Projects</button>
-      <button data-tab="settings">Settings</button>
-      <button data-tab="reports">Reports</button>
+      <button data-tab="projects" class="active">Проєкти</button>
+      <button data-tab="settings">Налаштування</button>
+      <button data-tab="reports">Звіти</button>
     </div>
   </div>
 </header>
@@ -51,63 +51,63 @@
   <section id="projects" class="page active">
     <div class="grid projects-layout">
       <aside class="card">
-        <div class="row"><strong>Проекты</strong><button class="btn dark" id="newProject">New</button></div>
-        <input id="searchProject" placeholder="Поиск" />
+        <div class="row"><strong>Проєкти</strong><button class="btn dark" id="newProject">Новий</button></div>
+        <input id="searchProject" placeholder="Пошук" />
         <div id="projectsList" class="list"></div>
       </aside>
       <div class="grid editor-layout">
         <div class="grid">
           <div class="card">
             <div class="row">
-              <h3>General</h3>
+              <h3>Загальні</h3>
               <div>
-                <button class="btn" id="duplicateProject">Duplicate</button>
-                <button class="btn red" id="deleteProject">Delete</button>
+                <button class="btn" id="duplicateProject">Дублювати</button>
+                <button class="btn red" id="deleteProject">Видалити</button>
               </div>
             </div>
             <div class="f2">
-              <div><label>Title</label><input id="p_title" /></div>
-              <div><label>Date</label><input id="p_date" type="date" /></div>
-              <div><label>Qty</label><input id="p_qty" type="number" min="1" value="1" /></div>
-              <div><label>Print time hours</label><input id="p_time" type="number" min="0" step="0.01" value="0" /></div>
+              <div><label>Назва</label><input id="p_title" /></div>
+              <div><label>Дата</label><input id="p_date" type="date" /></div>
+              <div><label>Кількість</label><input id="p_qty" type="number" min="1" value="1" /></div>
+              <div><label>Час друку (год)</label><input id="p_time" type="number" min="0" step="0.01" value="0" /></div>
             </div>
-            <div><label>Note</label><textarea id="p_note"></textarea></div>
+            <div><label>Примітка</label><textarea id="p_note"></textarea></div>
           </div>
 
           <div class="card">
-            <h3>Printing</h3>
+            <h3>Друк</h3>
             <div class="f2">
-              <div><label>Printer</label><select id="p_printer"></select></div>
-              <div><label>Material</label><select id="p_material"></select></div>
-              <div><label>Material grams</label><input id="p_grams" type="number" min="0" value="0" /></div>
-              <div><label>Waste %</label><input id="p_waste" type="number" min="0" max="100" value="5" /></div>
+              <div><label>Принтер</label><select id="p_printer"></select></div>
+              <div><label>Матеріал</label><select id="p_material"></select></div>
+              <div><label>Грамів матеріалу</label><input id="p_grams" type="number" min="0" value="0" /></div>
+              <div><label>Відходи %</label><input id="p_waste" type="number" min="0" max="100" value="5" /></div>
             </div>
           </div>
 
           <div class="card">
-            <h3>STL viewer</h3>
+            <h3>STL перегляд</h3>
             <input type="file" id="p_stl" accept=".stl" />
             <div id="viewer"></div>
             <div class="f3"><div><label>X</label><input id="d_x" readonly></div><div><label>Y</label><input id="d_y" readonly></div><div><label>Z</label><input id="d_z" readonly></div></div>
           </div>
 
           <div class="card">
-            <h3>Post-processing</h3>
+            <h3>Постобробка</h3>
             <div id="servicesWrap"></div>
           </div>
 
           <div class="card">
-            <h3>Pricing</h3>
+            <h3>Ціноутворення</h3>
             <div class="f2">
-              <div><label>Sale mode</label><select id="p_sale_mode"><option value="markup">markup</option><option value="manual">manual</option></select></div>
-              <div><label>Markup %</label><input id="p_markup" type="number" value="30" min="-100" max="1000" /></div>
-              <div><label>manual_sale_price</label><input id="p_manual" type="number" min="0" value="0" /></div>
+              <div><label>Режим продажу</label><select id="p_sale_mode"><option value="markup">Націнка</option><option value="manual">Ручна ціна</option></select></div>
+              <div><label>Націнка %</label><input id="p_markup" type="number" value="30" min="-100" max="1000" /></div>
+              <div><label>Ручна ціна продажу</label><input id="p_manual" type="number" min="0" value="0" /></div>
             </div>
           </div>
         </div>
 
         <aside class="card">
-          <h3>Результаты</h3>
+          <h3>Результати</h3>
           <ul class="result" id="resultList"></ul>
         </aside>
       </div>
@@ -117,25 +117,25 @@
   <section id="settings" class="page">
     <div class="grid f2">
       <div class="card">
-        <h3>Global settings</h3>
+        <h3>Глобальні налаштування</h3>
         <div><label>electricity_uah_per_kwh</label><input id="s_el" type="number" step="0.01" /></div>
         <div><label>labor_uah_per_hour</label><input id="s_labor" type="number" step="0.01" /></div>
-        <button class="btn dark" id="saveSettings">Save settings</button>
+        <button class="btn dark" id="saveSettings">Зберегти налаштування</button>
       </div>
-      <div class="card"><h3>Принтеры</h3><div id="printersTable"></div></div>
-      <div class="card"><h3>Материалы</h3><div id="materialsTable"></div></div>
-      <div class="card"><h3>Услуги</h3><div id="servicesTable"></div></div>
+      <div class="card"><h3>Принтери</h3><div id="printersTable"></div></div>
+      <div class="card"><h3>Матеріали</h3><div id="materialsTable"></div></div>
+      <div class="card"><h3>Послуги</h3><div id="servicesTable"></div></div>
     </div>
   </section>
 
   <section id="reports" class="page">
     <div class="card">
-      <h3>Reports</h3>
+      <h3>Звіти</h3>
       <div class="f2">
-        <div><label>Start</label><input id="r_start" type="date"></div>
-        <div><label>End</label><input id="r_end" type="date"></div>
+        <div><label>Початок</label><input id="r_start" type="date"></div>
+        <div><label>Кінець</label><input id="r_end" type="date"></div>
       </div>
-      <button class="btn dark" id="calcReport">Calculate</button>
+      <button class="btn dark" id="calcReport">Розрахувати</button>
       <ul class="result" id="reportList"></ul>
     </div>
   </section>
@@ -158,9 +158,38 @@ const SKEY='calc3d_v1';
 const state = JSON.parse(localStorage.getItem(SKEY) || JSON.stringify(defaults));
 if(!state.projects.length){ state.projects.push(newProject()); persist(); }
 let currentProjectId = state.projects[0].id;
+const byId = (id)=>document.getElementById(id);
+const p_title = byId('p_title');
+const p_date = byId('p_date');
+const p_qty = byId('p_qty');
+const p_time = byId('p_time');
+const p_note = byId('p_note');
+const p_printer = byId('p_printer');
+const p_material = byId('p_material');
+const p_grams = byId('p_grams');
+const p_waste = byId('p_waste');
+const p_sale_mode = byId('p_sale_mode');
+const p_markup = byId('p_markup');
+const p_manual = byId('p_manual');
+const d_x = byId('d_x');
+const d_y = byId('d_y');
+const d_z = byId('d_z');
+const resultList = byId('resultList');
+const newProjectBtn = byId('newProject');
+const duplicateProjectBtn = byId('duplicateProject');
+const deleteProjectBtn = byId('deleteProject');
+const searchProjectInput = byId('searchProject');
+const s_el = byId('s_el');
+const s_labor = byId('s_labor');
+const saveSettingsBtn = byId('saveSettings');
+const r_start = byId('r_start');
+const r_end = byId('r_end');
+const calcReportBtn = byId('calcReport');
+const reportList = byId('reportList');
+const p_stl = byId('p_stl');
 
 function persist(){ localStorage.setItem(SKEY, JSON.stringify(state)); }
-function newProject(){ return { id:Date.now(), title:'New project', date:new Date().toISOString().slice(0,10), qty:1, note:'', printer_id:'', print_time_hours:0, material_id:'', material_grams:0, waste_percent_override:5, services_used:[], sale_mode:'markup', markup_percent:30, manual_sale_price:0, dims:{x:0,y:0,z:0} }; }
+function newProject(){ return { id:Date.now(), title:'Новий проєкт', date:new Date().toISOString().slice(0,10), qty:1, note:'', printer_id:'', print_time_hours:0, material_id:'', material_grams:0, waste_percent_override:5, services_used:[], sale_mode:'markup', markup_percent:30, manual_sale_price:0, dims:{x:0,y:0,z:0} }; }
 function cur(){ return state.projects.find(p=>p.id===currentProjectId) || state.projects[0]; }
 const round=(n)=>Math.round(n*100)/100;
 
@@ -184,8 +213,8 @@ function calc(p){
 }
 
 function renderProjectList(){
-  const q=document.getElementById('searchProject').value.toLowerCase();
-  const list=document.getElementById('projectsList');
+  const q=searchProjectInput.value.toLowerCase();
+  const list=byId('projectsList');
   list.innerHTML='';
   state.projects.filter(p=>p.title.toLowerCase().includes(q)).forEach(p=>{
     const b=document.createElement('button'); b.className=p.id===currentProjectId?'active':'';
@@ -194,7 +223,7 @@ function renderProjectList(){
 }
 
 function fillSelect(id, items, key='name'){
-  const sel=document.getElementById(id); sel.innerHTML='<option value="">— select —</option>';
+  const sel=byId(id); sel.innerHTML='<option value="">— вибрати —</option>';
   items.forEach(i=>{const o=document.createElement('option'); o.value=i.id; o.textContent=i[key]; sel.appendChild(o);});
 }
 
@@ -217,21 +246,21 @@ function renderProjectForm(){
   state.services.forEach((s,idx)=>{
     const row=document.createElement('div'); row.className='f2';
     const checked=p.services_used[idx]?.selected ? 'checked':'';
-    row.innerHTML=`<label><input type="checkbox" data-i="${idx}" class="svc-check" ${checked}/> ${s.name} (fixed ${s.fixed_uah} грн)</label>${s.uses_time_bool?`<input type="number" min="0" class="svc-time" data-i="${idx}" value="${p.services_used[idx]?.time_minutes||0}"/>`:''}`;
+    row.innerHTML=`<label><input type="checkbox" data-i="${idx}" class="svc-check" ${checked}/> ${s.name} (фікс. ${s.fixed_uah} грн)</label>${s.uses_time_bool?`<input type="number" min="0" class="svc-time" data-i="${idx}" value="${p.services_used[idx]?.time_minutes||0}"/>`:''}`;
     wrap.appendChild(row);
   });
 
   const r=calc(p);
   resultList.innerHTML=`
-    <li><span>Electricity</span><b>${Math.round(r.electricity_cost)} грн</b></li>
-    <li><span>Material</span><b>${Math.round(r.material_cost)} грн</b></li>
-    <li><span>Labor (${r.minutes} min)</span><b>${Math.round(r.labor_cost)} грн</b></li>
-    <li><span>Fixed services</span><b>${Math.round(r.fixed)} грн</b></li>
-    <li><span>Post total</span><b>${Math.round(r.post_cost)} грн</b></li>
+    <li><span>Електрика</span><b>${Math.round(r.electricity_cost)} грн</b></li>
+    <li><span>Матеріал</span><b>${Math.round(r.material_cost)} грн</b></li>
+    <li><span>Робота (${r.minutes} хв)</span><b>${Math.round(r.labor_cost)} грн</b></li>
+    <li><span>Фіксовані послуги</span><b>${Math.round(r.fixed)} грн</b></li>
+    <li><span>Постобробка разом</span><b>${Math.round(r.post_cost)} грн</b></li>
     <li><span>COGS</span><b>${Math.round(r.cogs)} грн</b></li>
-    <li><span>Sale price</span><b>${Math.round(r.sale_price)} грн</b></li>
-    <li><span>Profit</span><b>${Math.round(r.profit)} грн</b></li>
-    <li><span>Margin %</span><b>${round(r.margin_percent)}%</b></li>`;
+    <li><span>Ціна продажу</span><b>${Math.round(r.sale_price)} грн</b></li>
+    <li><span>Прибуток</span><b>${Math.round(r.profit)} грн</b></li>
+    <li><span>Маржа %</span><b>${round(r.margin_percent)}%</b></li>`;
 }
 
 function bindProjectEvents(){
@@ -242,29 +271,37 @@ function bindProjectEvents(){
     document.querySelectorAll('.svc-time').forEach(el=>{const i=Number(el.dataset.i); p.services_used[i].time_minutes=Math.max(0,Number(el.value||0));});
     persist(); renderProjectList(); renderProjectForm();
   };
-  ['input','change'].forEach(ev=>document.getElementById('projects').addEventListener(ev,(e)=>{ if(e.target.closest('input,select,textarea')) save(); }));
+  ['input','change'].forEach(ev=>byId('projects').addEventListener(ev,(e)=>{ if(e.target.closest('input,select,textarea')) save(); }));
 
-  newProject.onclick=()=>{const p=newProject(); state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
-  duplicateProject.onclick=()=>{const p=JSON.parse(JSON.stringify(cur())); p.id=Date.now(); p.title += ' (copy)'; state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
-  deleteProject.onclick=()=>{if(state.projects.length===1) return alert('Нужен минимум 1 проект'); state.projects=state.projects.filter(p=>p.id!==currentProjectId); currentProjectId=state.projects[0].id; persist(); renderAll();};
-  searchProject.oninput=renderProjectList;
+  newProjectBtn.onclick=()=>{const p=newProject(); state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
+  duplicateProjectBtn.onclick=()=>{const p=JSON.parse(JSON.stringify(cur())); p.id=Date.now(); p.title += ' (копія)'; state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
+  deleteProjectBtn.onclick=()=>{if(state.projects.length===1) return alert('Потрібен мінімум 1 проєкт'); state.projects=state.projects.filter(p=>p.id!==currentProjectId); currentProjectId=state.projects[0].id; persist(); renderAll();};
+  searchProjectInput.oninput=renderProjectList;
   p_material.onchange=()=>{const m=state.materials.find(x=>x.id==p_material.value); if(m){ p_waste.value=m.default_waste_percent; p_waste.dispatchEvent(new Event('input')); }};
 }
 
 function renderSettings(){
   s_el.value=state.settings.electricity_uah_per_kwh; s_labor.value=state.settings.labor_uah_per_hour;
-  saveSettings.onclick=()=>{state.settings.electricity_uah_per_kwh=Number(s_el.value||0); state.settings.labor_uah_per_hour=Number(s_labor.value||0); persist(); alert('Saved'); renderAll();};
+  saveSettingsBtn.onclick=()=>{state.settings.electricity_uah_per_kwh=Number(s_el.value||0); state.settings.labor_uah_per_hour=Number(s_labor.value||0); persist(); alert('Збережено'); renderAll();};
 
   const table=(id,arr,fields)=>{
     const wrap=document.getElementById(id); wrap.innerHTML='';
     arr.forEach((item,idx)=>{
       const row=document.createElement('div'); row.className='card';
-      row.innerHTML=fields.map(f=>`<label>${f}<input data-f="${f}" value="${item[f]}"/></label>`).join('') + `<button class='btn red'>Delete</button>`;
-      row.querySelectorAll('input').forEach(inp=>inp.oninput=()=>{item[inp.dataset.f]=inp.type==='number'?Number(inp.value):inp.value; persist(); renderAll();});
+      row.innerHTML=fields.map(f=>{
+        const v = item[f];
+        const type = typeof v === 'number' ? 'number' : typeof v === 'boolean' ? 'checkbox' : 'text';
+        if(type==='checkbox') return `<label>${f}<input data-f="${f}" type="checkbox" ${v?'checked':''}/></label>`;
+        return `<label>${f}<input data-f="${f}" type="${type}" value="${v}"/></label>`;
+      }).join('') + `<button class='btn red'>Видалити</button>`;
+      row.querySelectorAll('input').forEach(inp=>{
+        const handler=()=>{item[inp.dataset.f]=inp.type==='number'?Number(inp.value):inp.type==='checkbox'?inp.checked:inp.value; persist();};
+        inp.oninput=handler; inp.onchange=handler;
+      });
       row.querySelector('button').onclick=()=>{arr.splice(idx,1); persist(); renderAll();};
       wrap.appendChild(row);
     });
-    const add=document.createElement('button'); add.className='btn dark'; add.textContent='Add'; add.onclick=()=>{const n={id:Date.now()}; fields.forEach(f=>n[f]=f.includes('uses_time_bool')?false:(f.includes('price')||f.includes('power')||f.includes('fixed')||f.includes('percent'))?0:''); arr.push(n); persist(); renderAll();};
+    const add=document.createElement('button'); add.className='btn dark'; add.textContent='Додати'; add.onclick=()=>{const n={id:Date.now()}; fields.forEach(f=>n[f]=f.includes('uses_time_bool')?false:(f.includes('price')||f.includes('power')||f.includes('fixed')||f.includes('percent'))?0:''); arr.push(n); persist(); renderAll();};
     wrap.appendChild(add);
   };
   table('printersTable',state.printers,['name','power_watts']);
@@ -273,13 +310,13 @@ function renderSettings(){
 }
 
 function renderReport(){
-  calcReport.onclick=()=>{
+  calcReportBtn.onclick=()=>{
     const start=r_start.value||'0000-01-01', end=r_end.value||'9999-12-31';
     const selected=state.projects.filter(p=>p.date>=start&&p.date<=end);
     const sum=selected.reduce((a,p)=>{const c=calc(p);a.cogs+=c.cogs;a.rev+=c.sale_price;a.profit+=c.profit;return a;},{cogs:0,rev:0,profit:0});
-    reportList.innerHTML=`<li><span>Projects</span><b>${selected.length}</b></li><li><span>Total COGS</span><b>${Math.round(sum.cogs)} грн</b></li><li><span>Total revenue</span><b>${Math.round(sum.rev)} грн</b></li><li><span>Total profit</span><b>${Math.round(sum.profit)} грн</b></li>`;
+    reportList.innerHTML=`<li><span>Кількість проєктів</span><b>${selected.length}</b></li><li><span>Загальна собівартість</span><b>${Math.round(sum.cogs)} грн</b></li><li><span>Загальна виручка</span><b>${Math.round(sum.rev)} грн</b></li><li><span>Загальний прибуток</span><b>${Math.round(sum.profit)} грн</b></li>`;
   };
-  calcReport.click();
+  calcReportBtn.click();
 }
 
 let renderer, scene, camera, controls;
@@ -293,7 +330,7 @@ function initViewer(){
   const tick=()=>{controls.update(); renderer.render(scene,camera); requestAnimationFrame(tick)}; tick();
 }
 
-p_stl?.addEventListener('change', async (e)=>{
+p_stl.addEventListener('change', async (e)=>{
   const file=e.target.files?.[0]; if(!file) return;
   const url=URL.createObjectURL(file);
   const loader=new STLLoader();

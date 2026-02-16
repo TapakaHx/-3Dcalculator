@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Калькулятор вартості 3D-друку (UAH)</title>
+  <style>
+    :root { --bg:#f8fafc; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#64748b; --brand:#0f172a; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--text)}
+    header{padding:14px 18px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
+    .wrap{max-width:1280px;margin:0 auto}
+    .row{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .tabs button{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .tabs button.active{background:var(--brand);color:#fff}
+    .page{display:none;padding:16px}.page.active{display:block}
+    .grid{display:grid;gap:12px}
+    .projects-layout{grid-template-columns:280px 1fr}
+    .editor-layout{grid-template-columns:1fr 320px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+    .card h3{margin:0 0 10px}
+    .list button{width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px;margin:4px 0;cursor:pointer}
+    .list button.active{background:#0f172a;color:#fff}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+    input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    textarea{min-height:70px}
+    .f2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .btn{border:1px solid var(--line);padding:8px 10px;border-radius:8px;background:#fff;cursor:pointer}
+    .btn.dark{background:#0f172a;color:#fff}
+    .btn.red{background:#dc2626;color:#fff;border-color:#dc2626}
+    .muted{color:var(--muted);font-size:12px}
+    .result li{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #e5e7eb}
+    .result li:last-child{border-bottom:0}
+    #viewer{height:260px;border:1px solid var(--line);border-radius:8px;background:#fff}
+    @media(max-width:1100px){.projects-layout,.editor-layout{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap row">
+    <strong>Калькулятор вартості 3D-друку · UAH</strong>
+    <div class="tabs">
+      <button data-tab="projects" class="active">Проєкти</button>
+      <button data-tab="settings">Налаштування</button>
+      <button data-tab="reports">Звіти</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section id="projects" class="page active">
+    <div class="grid projects-layout">
+      <aside class="card">
+        <div class="row"><strong>Проєкти</strong><button class="btn dark" id="newProject">Новий</button></div>
+        <input id="searchProject" placeholder="Пошук" />
+        <div id="projectsList" class="list"></div>
+      </aside>
+      <div class="grid editor-layout">
+        <div class="grid">
+          <div class="card">
+            <div class="row">
+              <h3>Загальні</h3>
+              <div>
+                <button class="btn" id="duplicateProject">Дублювати</button>
+                <button class="btn red" id="deleteProject">Видалити</button>
+              </div>
+            </div>
+            <div class="f2">
+              <div><label>Назва</label><input id="p_title" /></div>
+              <div><label>Дата</label><input id="p_date" type="date" /></div>
+              <div><label>Кількість</label><input id="p_qty" type="number" min="1" value="1" /></div>
+              <div><label>Час друку (год)</label><input id="p_time" type="number" min="0" step="0.01" value="0" /></div>
+            </div>
+            <div><label>Примітка</label><textarea id="p_note"></textarea></div>
+          </div>
+
+          <div class="card">
+            <h3>Друк</h3>
+            <div class="f2">
+              <div><label>Принтер</label><select id="p_printer"></select></div>
+              <div><label>Матеріал</label><select id="p_material"></select></div>
+              <div><label>Грамів матеріалу</label><input id="p_grams" type="number" min="0" value="0" /></div>
+              <div><label>Відходи %</label><input id="p_waste" type="number" min="0" max="100" value="5" /></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>STL перегляд</h3>
+            <input type="file" id="p_stl" accept=".stl" />
+            <div id="viewer"></div>
+            <div class="f3"><div><label>X</label><input id="d_x" readonly></div><div><label>Y</label><input id="d_y" readonly></div><div><label>Z</label><input id="d_z" readonly></div></div>
+          </div>
+
+          <div class="card">
+            <h3>Постобробка</h3>
+            <div id="servicesWrap"></div>
+          </div>
+
+          <div class="card">
+            <h3>Ціноутворення</h3>
+            <div class="f2">
+              <div><label>Режим продажу</label><select id="p_sale_mode"><option value="markup">Націнка</option><option value="manual">Ручна ціна</option></select></div>
+              <div><label>Націнка %</label><input id="p_markup" type="number" value="30" min="-100" max="1000" /></div>
+              <div><label>Ручна ціна продажу</label><input id="p_manual" type="number" min="0" value="0" /></div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="card">
+          <h3>Результати</h3>
+          <ul class="result" id="resultList"></ul>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="settings" class="page">
+    <div class="grid f2">
+      <div class="card">
+        <h3>Глобальні налаштування</h3>
+        <div><label>electricity_uah_per_kwh</label><input id="s_el" type="number" step="0.01" /></div>
+        <div><label>labor_uah_per_hour</label><input id="s_labor" type="number" step="0.01" /></div>
+        <button class="btn dark" id="saveSettings">Зберегти налаштування</button>
+      </div>
+      <div class="card"><h3>Принтери</h3><div id="printersTable"></div></div>
+      <div class="card"><h3>Матеріали</h3><div id="materialsTable"></div></div>
+      <div class="card"><h3>Послуги</h3><div id="servicesTable"></div></div>
+    </div>
+  </section>
+
+  <section id="reports" class="page">
+    <div class="card">
+      <h3>Звіти</h3>
+      <div class="f2">
+        <div><label>Початок</label><input id="r_start" type="date"></div>
+        <div><label>Кінець</label><input id="r_end" type="date"></div>
+      </div>
+      <button class="btn dark" id="calcReport">Розрахувати</button>
+      <ul class="result" id="reportList"></ul>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.168.0/build/three.module.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/controls/OrbitControls.js';
+import { STLLoader } from 'https://cdn.jsdelivr.net/npm/three@0.168.0/examples/jsm/loaders/STLLoader.js';
+
+const defaults = {
+  settings: { electricity_uah_per_kwh: 4.32, labor_uah_per_hour: 200 },
+  printers: [{id:1,name:'Prusa MK3S+',power_watts:120},{id:2,name:'Bambu P1S',power_watts:80}],
+  materials: [{id:1,name:'PLA',price_uah_per_kg:450,default_waste_percent:5},{id:2,name:'PETG',price_uah_per_kg:650,default_waste_percent:7},{id:3,name:'ABS',price_uah_per_kg:700,default_waste_percent:10},{id:4,name:'TPU',price_uah_per_kg:900,default_waste_percent:8}],
+  services: [{id:1,name:'Support removal',fixed_uah:20,uses_time_bool:true},{id:2,name:'Sanding',fixed_uah:30,uses_time_bool:true},{id:3,name:'Primer',fixed_uah:40,uses_time_bool:false},{id:4,name:'Painting',fixed_uah:60,uses_time_bool:true},{id:5,name:'Packaging',fixed_uah:15,uses_time_bool:false}],
+  projects: []
+};
+
+const SKEY='calc3d_v1';
+const state = JSON.parse(localStorage.getItem(SKEY) || JSON.stringify(defaults));
+if(!state.projects.length){ state.projects.push(newProject()); persist(); }
+let currentProjectId = state.projects[0].id;
+const byId = (id)=>document.getElementById(id);
+const p_title = byId('p_title');
+const p_date = byId('p_date');
+const p_qty = byId('p_qty');
+const p_time = byId('p_time');
+const p_note = byId('p_note');
+const p_printer = byId('p_printer');
+const p_material = byId('p_material');
+const p_grams = byId('p_grams');
+const p_waste = byId('p_waste');
+const p_sale_mode = byId('p_sale_mode');
+const p_markup = byId('p_markup');
+const p_manual = byId('p_manual');
+const d_x = byId('d_x');
+const d_y = byId('d_y');
+const d_z = byId('d_z');
+const resultList = byId('resultList');
+const newProjectBtn = byId('newProject');
+const duplicateProjectBtn = byId('duplicateProject');
+const deleteProjectBtn = byId('deleteProject');
+const searchProjectInput = byId('searchProject');
+const s_el = byId('s_el');
+const s_labor = byId('s_labor');
+const saveSettingsBtn = byId('saveSettings');
+const r_start = byId('r_start');
+const r_end = byId('r_end');
+const calcReportBtn = byId('calcReport');
+const reportList = byId('reportList');
+const p_stl = byId('p_stl');
+
+function persist(){ localStorage.setItem(SKEY, JSON.stringify(state)); }
+function newProject(){ return { id:Date.now(), title:'Новий проєкт', date:new Date().toISOString().slice(0,10), qty:1, note:'', printer_id:'', print_time_hours:0, material_id:'', material_grams:0, waste_percent_override:5, services_used:[], sale_mode:'markup', markup_percent:30, manual_sale_price:0, dims:{x:0,y:0,z:0} }; }
+function cur(){ return state.projects.find(p=>p.id===currentProjectId) || state.projects[0]; }
+const round=(n)=>Math.round(n*100)/100;
+
+function calc(p){
+  const printer = state.printers.find(x=>x.id==p.printer_id);
+  const material = state.materials.find(x=>x.id==p.material_id);
+  const used = p.services_used.filter(s=>s.selected);
+  const serviceMeta = id=>state.services.find(x=>x.id===id);
+  const minutes = used.reduce((a,s)=>a+(Number(s.time_minutes)||0),0);
+  const fixed = used.reduce((a,s)=>a+(serviceMeta(s.service_id)?.fixed_uah||0),0);
+  const electricity_cost = printer ? (printer.power_watts/1000)*Number(p.print_time_hours||0)*state.settings.electricity_uah_per_kwh : 0;
+  const waste = Number(p.waste_percent_override||0);
+  const material_cost = material ? (Number(p.material_grams||0)/1000)*material.price_uah_per_kg*(1+waste/100) : 0;
+  const labor_cost = (minutes/60)*state.settings.labor_uah_per_hour;
+  const post_cost = labor_cost + fixed;
+  const cogs = electricity_cost + material_cost + post_cost;
+  const sale_price = p.sale_mode==='markup' ? cogs*(1+Number(p.markup_percent||0)/100) : Number(p.manual_sale_price||0);
+  const profit = sale_price - cogs;
+  const margin_percent = sale_price>0 ? (profit/sale_price*100) : 0;
+  return {electricity_cost,material_cost,labor_cost,fixed,post_cost,cogs,sale_price,profit,margin_percent,minutes};
+}
+
+function renderProjectList(){
+  const q=searchProjectInput.value.toLowerCase();
+  const list=byId('projectsList');
+  list.innerHTML='';
+  state.projects.filter(p=>p.title.toLowerCase().includes(q)).forEach(p=>{
+    const b=document.createElement('button'); b.className=p.id===currentProjectId?'active':'';
+    b.textContent=`${p.title} (${p.date})`; b.onclick=()=>{currentProjectId=p.id; renderAll();}; list.appendChild(b);
+  });
+}
+
+function fillSelect(id, items, key='name'){
+  const sel=byId(id); sel.innerHTML='<option value="">— вибрати —</option>';
+  items.forEach(i=>{const o=document.createElement('option'); o.value=i.id; o.textContent=i[key]; sel.appendChild(o);});
+}
+
+function upsertServiceRows(){
+  const p=cur();
+  state.services.forEach(s=>{ if(!p.services_used.find(x=>x.service_id===s.id)) p.services_used.push({service_id:s.id,selected:false,time_minutes:0});});
+}
+
+function renderProjectForm(){
+  const p=cur(); upsertServiceRows();
+  p.services_used = state.services.map(s=>p.services_used.find(x=>x.service_id===s.id) || {service_id:s.id,selected:false,time_minutes:0});
+  ['title','date','qty','time','note','grams','waste','sale_mode','markup','manual'].forEach(()=>{});
+  p_title.value=p.title; p_date.value=p.date; p_qty.value=p.qty; p_time.value=p.print_time_hours; p_note.value=p.note;
+  fillSelect('p_printer',state.printers); fillSelect('p_material',state.materials);
+  p_printer.value=p.printer_id||''; p_material.value=p.material_id||''; p_grams.value=p.material_grams; p_waste.value=p.waste_percent_override;
+  p_sale_mode.value=p.sale_mode; p_markup.value=p.markup_percent; p_manual.value=p.manual_sale_price;
+  d_x.value=round(p.dims?.x||0); d_y.value=round(p.dims?.y||0); d_z.value=round(p.dims?.z||0);
+
+  const wrap=document.getElementById('servicesWrap'); wrap.innerHTML='';
+  state.services.forEach((s,idx)=>{
+    const row=document.createElement('div'); row.className='f2';
+    const checked=p.services_used[idx]?.selected ? 'checked':'';
+    row.innerHTML=`<label><input type="checkbox" data-i="${idx}" class="svc-check" ${checked}/> ${s.name} (фікс. ${s.fixed_uah} грн)</label>${s.uses_time_bool?`<input type="number" min="0" class="svc-time" data-i="${idx}" value="${p.services_used[idx]?.time_minutes||0}"/>`:''}`;
+    wrap.appendChild(row);
+  });
+
+  const r=calc(p);
+  resultList.innerHTML=`
+    <li><span>Електрика</span><b>${Math.round(r.electricity_cost)} грн</b></li>
+    <li><span>Матеріал</span><b>${Math.round(r.material_cost)} грн</b></li>
+    <li><span>Робота (${r.minutes} хв)</span><b>${Math.round(r.labor_cost)} грн</b></li>
+    <li><span>Фіксовані послуги</span><b>${Math.round(r.fixed)} грн</b></li>
+    <li><span>Постобробка разом</span><b>${Math.round(r.post_cost)} грн</b></li>
+    <li><span>COGS</span><b>${Math.round(r.cogs)} грн</b></li>
+    <li><span>Ціна продажу</span><b>${Math.round(r.sale_price)} грн</b></li>
+    <li><span>Прибуток</span><b>${Math.round(r.profit)} грн</b></li>
+    <li><span>Маржа %</span><b>${round(r.margin_percent)}%</b></li>`;
+}
+
+function bindProjectEvents(){
+  const save=()=>{const p=cur(); p.title=p_title.value; p.date=p_date.value; p.qty=Math.max(1,Number(p_qty.value||1)); p.print_time_hours=Math.max(0,Number(p_time.value||0)); p.note=p_note.value;
+    p.printer_id=p_printer.value?Number(p_printer.value):''; p.material_id=p_material.value?Number(p_material.value):''; p.material_grams=Math.max(0,Number(p_grams.value||0));
+    p.waste_percent_override=Math.max(0,Math.min(100,Number(p_waste.value||0))); p.sale_mode=p_sale_mode.value; p.markup_percent=Math.max(-100,Math.min(1000,Number(p_markup.value||0))); p.manual_sale_price=Math.max(0,Number(p_manual.value||0));
+    document.querySelectorAll('.svc-check').forEach(el=>{const i=Number(el.dataset.i); p.services_used[i].selected=el.checked;});
+    document.querySelectorAll('.svc-time').forEach(el=>{const i=Number(el.dataset.i); p.services_used[i].time_minutes=Math.max(0,Number(el.value||0));});
+    persist(); renderProjectList(); renderProjectForm();
+  };
+  ['input','change'].forEach(ev=>byId('projects').addEventListener(ev,(e)=>{ if(e.target.closest('input,select,textarea')) save(); }));
+
+  newProjectBtn.onclick=()=>{const p=newProject(); state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
+  duplicateProjectBtn.onclick=()=>{const p=JSON.parse(JSON.stringify(cur())); p.id=Date.now(); p.title += ' (копія)'; state.projects.unshift(p); currentProjectId=p.id; persist(); renderAll();};
+  deleteProjectBtn.onclick=()=>{if(state.projects.length===1) return alert('Потрібен мінімум 1 проєкт'); state.projects=state.projects.filter(p=>p.id!==currentProjectId); currentProjectId=state.projects[0].id; persist(); renderAll();};
+  searchProjectInput.oninput=renderProjectList;
+  p_material.onchange=()=>{const m=state.materials.find(x=>x.id==p_material.value); if(m){ p_waste.value=m.default_waste_percent; p_waste.dispatchEvent(new Event('input')); }};
+}
+
+function renderSettings(){
+  s_el.value=state.settings.electricity_uah_per_kwh; s_labor.value=state.settings.labor_uah_per_hour;
+  saveSettingsBtn.onclick=()=>{state.settings.electricity_uah_per_kwh=Number(s_el.value||0); state.settings.labor_uah_per_hour=Number(s_labor.value||0); persist(); alert('Збережено'); renderAll();};
+
+  const table=(id,arr,fields)=>{
+    const wrap=document.getElementById(id); wrap.innerHTML='';
+    arr.forEach((item,idx)=>{
+      const row=document.createElement('div'); row.className='card';
+      row.innerHTML=fields.map(f=>{
+        const v = item[f];
+        const type = typeof v === 'number' ? 'number' : typeof v === 'boolean' ? 'checkbox' : 'text';
+        if(type==='checkbox') return `<label>${f}<input data-f="${f}" type="checkbox" ${v?'checked':''}/></label>`;
+        return `<label>${f}<input data-f="${f}" type="${type}" value="${v}"/></label>`;
+      }).join('') + `<button class='btn red'>Видалити</button>`;
+      row.querySelectorAll('input').forEach(inp=>{
+        const handler=()=>{item[inp.dataset.f]=inp.type==='number'?Number(inp.value):inp.type==='checkbox'?inp.checked:inp.value; persist();};
+        inp.oninput=handler; inp.onchange=handler;
+      });
+      row.querySelector('button').onclick=()=>{arr.splice(idx,1); persist(); renderAll();};
+      wrap.appendChild(row);
+    });
+    const add=document.createElement('button'); add.className='btn dark'; add.textContent='Додати'; add.onclick=()=>{const n={id:Date.now()}; fields.forEach(f=>n[f]=f.includes('uses_time_bool')?false:(f.includes('price')||f.includes('power')||f.includes('fixed')||f.includes('percent'))?0:''); arr.push(n); persist(); renderAll();};
+    wrap.appendChild(add);
+  };
+  table('printersTable',state.printers,['name','power_watts']);
+  table('materialsTable',state.materials,['name','price_uah_per_kg','default_waste_percent']);
+  table('servicesTable',state.services,['name','fixed_uah','uses_time_bool']);
+}
+
+function renderReport(){
+  calcReportBtn.onclick=()=>{
+    const start=r_start.value||'0000-01-01', end=r_end.value||'9999-12-31';
+    const selected=state.projects.filter(p=>p.date>=start&&p.date<=end);
+    const sum=selected.reduce((a,p)=>{const c=calc(p);a.cogs+=c.cogs;a.rev+=c.sale_price;a.profit+=c.profit;return a;},{cogs:0,rev:0,profit:0});
+    reportList.innerHTML=`<li><span>Кількість проєктів</span><b>${selected.length}</b></li><li><span>Загальна собівартість</span><b>${Math.round(sum.cogs)} грн</b></li><li><span>Загальна виручка</span><b>${Math.round(sum.rev)} грн</b></li><li><span>Загальний прибуток</span><b>${Math.round(sum.profit)} грн</b></li>`;
+  };
+  calcReportBtn.click();
+}
+
+let renderer, scene, camera, controls;
+function initViewer(){
+  const box=document.getElementById('viewer');
+  scene=new THREE.Scene(); scene.background=new THREE.Color(0xf8fafc);
+  camera=new THREE.PerspectiveCamera(60, box.clientWidth/box.clientHeight,0.1,1000); camera.position.set(120,120,120);
+  renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(box.clientWidth,box.clientHeight); box.innerHTML=''; box.appendChild(renderer.domElement);
+  controls=new OrbitControls(camera, renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff,0.6)); const l=new THREE.DirectionalLight(0xffffff,1); l.position.set(100,100,100); scene.add(l);
+  const tick=()=>{controls.update(); renderer.render(scene,camera); requestAnimationFrame(tick)}; tick();
+}
+
+p_stl.addEventListener('change', async (e)=>{
+  const file=e.target.files?.[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  const loader=new STLLoader();
+  loader.load(url,geo=>{
+    while(scene.children.length>2) scene.remove(scene.children[2]);
+    const mat=new THREE.MeshStandardMaterial({color:0x64748b});
+    const mesh=new THREE.Mesh(geo,mat); geo.computeBoundingBox();
+    const sz=new THREE.Vector3(); geo.boundingBox.getSize(sz); geo.center(); scene.add(mesh);
+    const p=cur(); p.dims={x:sz.x,y:sz.y,z:sz.z}; persist(); renderProjectForm();
+  });
+});
+
+function renderAll(){ renderProjectList(); renderProjectForm(); renderSettings(); renderReport(); }
+
+bindProjectEvents(); initViewer(); renderAll();
+
+document.querySelectorAll('[data-tab]').forEach(btn=>btn.onclick=()=>{
+  document.querySelectorAll('[data-tab]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(btn.dataset.tab).classList.add('active');
+});
+</script>
+</body>
+</html>

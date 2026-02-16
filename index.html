@@ -10,8 +10,10 @@
     header{padding:14px 18px;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:10}
     .wrap{max-width:1280px;margin:0 auto}
     .row{display:flex;gap:12px;align-items:center;justify-content:space-between}
-    .tabs button{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
-    .tabs button.active{background:var(--brand);color:#fff}
+    .tabs a{display:inline-block;text-decoration:none;border:1px solid var(--line);color:var(--text);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+    .tabs a.active{background:var(--brand);color:#fff}
+    .subnav{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+    .subnav a{font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 8px;background:#fff}
     .page{display:none;padding:16px}.page.active{display:block}
     .grid{display:grid;gap:12px}
     .projects-layout{grid-template-columns:280px 1fr}
@@ -39,10 +41,16 @@
 <header>
   <div class="wrap row">
     <strong>Калькулятор вартості 3D-друку · UAH</strong>
-    <div class="tabs">
-      <button data-tab="projects" class="active">Проєкти</button>
-      <button data-tab="settings">Налаштування</button>
-      <button data-tab="reports">Звіти</button>
+    <div>
+      <div class="tabs">
+        <a data-tab="projects" href="#projects" class="active">Проєкти</a>
+        <a data-tab="settings" href="#settings">Налаштування</a>
+        <a data-tab="reports" href="#reports">Звіти</a>
+      </div>
+      <div class="subnav">
+        <a href="#settings">Пряме посилання: Налаштування</a>
+        <a href="#reports">Пряме посилання: Звіти</a>
+      </div>
     </div>
   </div>
 </header>
@@ -347,12 +355,27 @@ function renderAll(){ renderProjectList(); renderProjectForm(); renderSettings()
 
 bindProjectEvents(); initViewer(); renderAll();
 
-document.querySelectorAll('[data-tab]').forEach(btn=>btn.onclick=()=>{
+function setActiveTab(tab){
+  const safe = ['projects','settings','reports'].includes(tab) ? tab : 'projects';
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  const activeBtn = document.querySelector(`[data-tab="${safe}"]`);
+  if(activeBtn) activeBtn.classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(btn.dataset.tab).classList.add('active');
+  const page = document.getElementById(safe);
+  if(page) page.classList.add('active');
+}
+
+document.querySelectorAll('[data-tab]').forEach(link=>link.addEventListener('click',()=>{
+  const tab = link.dataset.tab;
+  setActiveTab(tab);
+}));
+
+window.addEventListener('hashchange',()=>{
+  const tab = (location.hash || '#projects').replace('#','');
+  setActiveTab(tab);
 });
+
+setActiveTab((location.hash || '#projects').replace('#',''));
 </script>
 </body>
 </html>

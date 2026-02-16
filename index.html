@@ -120,8 +120,8 @@
     <div class="grid f2">
       <div class="card">
         <h3>Глобальні налаштування</h3>
-        <div><label>electricity_uah_per_kwh</label><input id="s_el" type="number" step="0.01" /></div>
-        <div><label>labor_uah_per_hour</label><input id="s_labor" type="number" step="0.01" /></div>
+        <div><label>Електрика (грн/кВт·год)</label><input id="s_el" type="number" step="0.01" /></div>
+        <div><label>Оплата праці (грн/год)</label><input id="s_labor" type="number" step="0.01" /></div>
         <button class="btn dark" id="saveSettings">Зберегти налаштування</button>
       </div>
       <div class="card"><h3>Принтери</h3><div id="printersTable"></div></div>
@@ -148,7 +148,7 @@ const defaults = {
   settings: { electricity_uah_per_kwh: 4.32, labor_uah_per_hour: 200 },
   printers: [{id:1,name:'Prusa MK3S+',power_watts:120},{id:2,name:'Bambu P1S',power_watts:80}],
   materials: [{id:1,name:'PLA',price_uah_per_kg:450,default_waste_percent:5},{id:2,name:'PETG',price_uah_per_kg:650,default_waste_percent:7},{id:3,name:'ABS',price_uah_per_kg:700,default_waste_percent:10},{id:4,name:'TPU',price_uah_per_kg:900,default_waste_percent:8}],
-  services: [{id:1,name:'Support removal',fixed_uah:20,uses_time_bool:true},{id:2,name:'Sanding',fixed_uah:30,uses_time_bool:true},{id:3,name:'Primer',fixed_uah:40,uses_time_bool:false},{id:4,name:'Painting',fixed_uah:60,uses_time_bool:true},{id:5,name:'Packaging',fixed_uah:15,uses_time_bool:false}],
+  services: [{id:1,name:'Видалення підтримок',fixed_uah:20,uses_time_bool:true},{id:2,name:'Шліфування',fixed_uah:30,uses_time_bool:true},{id:3,name:'Ґрунтування',fixed_uah:40,uses_time_bool:false},{id:4,name:'Фарбування',fixed_uah:60,uses_time_bool:true},{id:5,name:'Пакування',fixed_uah:15,uses_time_bool:false}],
   projects: []
 };
 
@@ -156,6 +156,33 @@ const SKEY='calc3d_v1';
 const state = JSON.parse(localStorage.getItem(SKEY) || JSON.stringify(defaults));
 if(!state.projects.length){ state.projects.push(newProject()); persist(); }
 let currentProjectId = state.projects[0].id;
+
+const ukFieldLabel = {
+  name: 'Назва',
+  power_watts: 'Потужність (Вт)',
+  price_uah_per_kg: 'Ціна (грн/кг)',
+  default_waste_percent: 'Відходи за замовчуванням (%)',
+  fixed_uah: 'Фіксована ціна (грн)',
+  uses_time_bool: 'Використовує час'
+};
+
+const ukServiceNames = {
+  'Support removal': 'Видалення підтримок',
+  'Sanding': 'Шліфування',
+  'Primer': 'Ґрунтування',
+  'Painting': 'Фарбування',
+  'Packaging': 'Пакування'
+};
+
+function normalizeLanguage(){
+  state.services.forEach((service) => {
+    if (ukServiceNames[service.name]) {
+      service.name = ukServiceNames[service.name];
+    }
+  });
+}
+normalizeLanguage();
+persist();
 const byId = (id)=>document.getElementById(id);
 const p_title = byId('p_title');
 const p_date = byId('p_date');
@@ -289,8 +316,9 @@ function renderSettings(){
       row.innerHTML=fields.map(f=>{
         const v = item[f];
         const type = typeof v === 'number' ? 'number' : typeof v === 'boolean' ? 'checkbox' : 'text';
-        if(type==='checkbox') return `<label>${f}<input data-f="${f}" type="checkbox" ${v?'checked':''}/></label>`;
-        return `<label>${f}<input data-f="${f}" type="${type}" value="${v}"/></label>`;
+        const label = ukFieldLabel[f] || f;
+        if(type==='checkbox') return `<label>${label}<input data-f="${f}" type="checkbox" ${v?'checked':''}/></label>`;
+        return `<label>${label}<input data-f="${f}" type="${type}" value="${v}"/></label>`;
       }).join('') + `<button class='btn red'>Видалити</button>`;
       row.querySelectorAll('input').forEach(inp=>{
         const handler=()=>{item[inp.dataset.f]=inp.type==='number'?Number(inp.value):inp.type==='checkbox'?inp.checked:inp.value; persist();};

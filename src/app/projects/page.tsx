@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { FilePlus2, FolderPlus, Trash2, Copy, AlertTriangle } from "lucide-react";
+import { FilePlus2, FolderPlus, Trash2, Copy, AlertTriangle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,6 +68,37 @@ const emptyForm: ProjectForm = {
   includePrinterService: false,
   services: []
 };
+
+
+
+function ResultRow({
+  label,
+  value,
+  hint,
+  emphasized = false
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  emphasized?: boolean;
+}) {
+  return (
+    <div className="group/row relative">
+      <div
+        className={`flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 ${emphasized ? "text-base font-semibold" : ""}`}
+      >
+        <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200">
+          {label}
+          <Info className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+        </span>
+        <span>{value}</span>
+      </div>
+      <div className="pointer-events-none absolute -top-2 left-2 right-2 z-20 -translate-y-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover/row:opacity-100 group-focus-within/row:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        {hint}
+      </div>
+    </div>
+  );
+}
 
 type Metadata = {
   settings: { electricityUahPerKwh: number; laborUahPerHour: number } | null;
@@ -199,7 +230,7 @@ export default function ProjectsPage() {
         })
       });
       setSaveStatus("saved");
-      toast.success("Project saved");
+      toast.success("Проєкт збережено");
       setTimeout(() => setSaveStatus("idle"), 2000);
       refreshList();
     }, 800);
@@ -221,12 +252,12 @@ export default function ProjectsPage() {
     const response = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "New project" })
+      body: JSON.stringify({ title: "Новий проєкт" })
     });
     const data = await response.json();
     await refreshList();
     setSelectedId(data.id);
-    toast.success("Project created");
+    toast.success("Проєкт створено");
   };
 
   const handleDuplicate = async () => {
@@ -237,15 +268,15 @@ export default function ProjectsPage() {
     const data = await response.json();
     await refreshList();
     setSelectedId(data.id);
-    toast.success("Project duplicated");
+    toast.success("Проєкт продубльовано");
   };
 
   const handleDelete = async () => {
     if (!selectedId) return;
-    const confirmed = window.confirm("Delete this project?");
+    const confirmed = window.confirm("Видалити цей проєкт?");
     if (!confirmed) return;
     await fetch(`/api/projects/${selectedId}`, { method: "DELETE" });
-    toast.success("Project deleted");
+    toast.success("Проєкт видалено");
     await refreshList();
     setSelectedId(null);
   };
@@ -302,7 +333,7 @@ export default function ProjectsPage() {
 
   const warningMissing =
     !values.printerId || !values.materialId
-      ? "Select printer and material to get full cost"
+      ? "Оберіть принтер і матеріал, щоб отримати повний розрахунок"
       : null;
 
   const handleMaterialChange = (value: number | null) => {
@@ -333,7 +364,7 @@ export default function ProjectsPage() {
       form.setValue("stlYmm", dims.y);
       form.setValue("stlZmm", dims.z);
     }
-    toast.success("STL uploaded");
+    toast.success("STL файл завантажено");
     await refreshList();
   };
 
@@ -370,17 +401,17 @@ export default function ProjectsPage() {
 
   return (
     <AppShell
-      title="Projects"
-      description="Auto-save enabled · changes persist every 800ms."
+      title="Проєкти"
+      description="Автозбереження увімкнене · зміни зберігаються кожні 800 мс."
     >
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-        <aside className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-            Project list
+        <aside className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            Список проєктів
           </div>
           <div className="mt-3 flex gap-2">
             <Input
-              placeholder="Search project..."
+              placeholder="Пошук проєкту..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -396,11 +427,11 @@ export default function ProjectsPage() {
                 className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
                   selectedId === project.id
                     ? "bg-slate-900 text-white"
-                    : "bg-slate-100 hover:bg-slate-200"
+                    : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                 }`}
               >
                 <div className="font-medium">{project.title}</div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-slate-500 dark:text-slate-400">
                   {new Date(project.date).toLocaleDateString("uk-UA")}
                 </div>
               </button>
@@ -411,34 +442,34 @@ export default function ProjectsPage() {
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="text-sm text-slate-500">Active project</div>
-              <div className="text-lg font-semibold text-slate-900">
-                {values.title || "Untitled"}
+              <div className="text-sm text-slate-500 dark:text-slate-400">Активний проєкт</div>
+              <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                {values.title || "Без назви"}
               </div>
-              <div className="text-xs text-slate-500">
-                Status:{" "}
+              <div className="text-xs text-slate-500 dark:text-slate-400">
+                Стан: 
                 {saveStatus === "saving"
-                  ? "Saving..."
+                  ? "Збереження..."
                   : saveStatus === "saved"
-                    ? "Saved"
-                    : "Idle"}
+                    ? "Збережено"
+                    : "Очікування"}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={handleNew}>
-                <FilePlus2 className="mr-2 h-4 w-4" /> New project
+                <FilePlus2 className="mr-2 h-4 w-4" /> Новий проєкт
               </Button>
               <Button variant="outline" onClick={handleDuplicate}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicate
+                <Copy className="mr-2 h-4 w-4" /> Дублювати
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4" /> Видалити
               </Button>
             </div>
           </div>
 
           {warningMissing && (
-            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 dark:border-amber-900/70 dark:bg-amber-900/20 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">
               <AlertTriangle className="h-4 w-4" /> {warningMissing}
             </div>
           )}
@@ -447,19 +478,19 @@ export default function ProjectsPage() {
             <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>General</CardTitle>
+                <CardTitle>Загальне</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Назва</Label>
                   <Input
                     id="title"
                     {...form.register("title")}
-                    placeholder="Project name"
+                    placeholder="Назва проєкту"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date">Дата</Label>
                   <Input
                     id="date"
                     type="date"
@@ -468,7 +499,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="qty">Qty</Label>
+                  <Label htmlFor="qty">Кількість</Label>
                   <Input
                     id="qty"
                     type="number"
@@ -480,7 +511,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="note">Note</Label>
+                  <Label htmlFor="note">Нотатка</Label>
                   <Textarea id="note" {...form.register("note")} />
                 </div>
               </CardContent>
@@ -488,11 +519,11 @@ export default function ProjectsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Printing setup</CardTitle>
+                <CardTitle>Налаштування друку</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label>Printer</Label>
+                  <Label>Принтер</Label>
                   <Select
                     value={values.printerId?.toString() ?? ""}
                     onChange={(event) =>
@@ -504,7 +535,7 @@ export default function ProjectsPage() {
                       )
                     }
                   >
-                    <option value="">Select printer</option>
+                    <option value="">Оберіть принтер</option>
                     {metadata?.printers.map((printer) => (
                       <option key={printer.id} value={printer.id}>
                         {printer.name}
@@ -512,8 +543,8 @@ export default function ProjectsPage() {
                     ))}
                   </Select>
                   {selectedPrinter && (
-                    <div className="mt-2 space-y-1 text-xs text-slate-500">
-                      <div>Power: {selectedPrinter.powerWatts} W</div>
+                    <div className="mt-2 space-y-1 text-xs text-slate-500 dark:text-slate-400">
+                      <div>Споживання: {selectedPrinter.powerWatts} Вт</div>
                       {selectedPrinter.amortUahPerHour && (
                         <label className="flex items-center gap-2">
                           <Checkbox
@@ -525,7 +556,7 @@ export default function ProjectsPage() {
                               )
                             }
                           />
-                          Include amortization ({selectedPrinter.amortUahPerHour} грн/год)
+                          Додати амортизацію принтера ({selectedPrinter.amortUahPerHour} грн/год)
                         </label>
                       )}
                       {selectedPrinter.serviceUahPerHour && (
@@ -539,14 +570,14 @@ export default function ProjectsPage() {
                               )
                             }
                           />
-                          Include service ({selectedPrinter.serviceUahPerHour} грн/год)
+                          Додати сервіс/обслуговування принтера ({selectedPrinter.serviceUahPerHour} грн/год)
                         </label>
                       )}
                     </div>
                   )}
                 </div>
                 <div>
-                  <Label>Print time</Label>
+                  <Label>Час друку</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="number"
@@ -559,7 +590,7 @@ export default function ProjectsPage() {
                           hours + printMinutes / 60
                         );
                       }}
-                      placeholder="Hours"
+                      placeholder="Години"
                     />
                     <Input
                       type="number"
@@ -573,12 +604,12 @@ export default function ProjectsPage() {
                           printHours + minutes / 60
                         );
                       }}
-                      placeholder="Minutes"
+                      placeholder="Хвилини"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label>Material</Label>
+                  <Label>Матеріал</Label>
                   <Select
                     value={values.materialId?.toString() ?? ""}
                     onChange={(event) => {
@@ -589,7 +620,7 @@ export default function ProjectsPage() {
                       handleMaterialChange(value);
                     }}
                   >
-                    <option value="">Select material</option>
+                    <option value="">Оберіть матеріал</option>
                     {metadata?.materials.map((material) => (
                       <option key={material.id} value={material.id}>
                         {material.name}
@@ -598,7 +629,7 @@ export default function ProjectsPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Material grams</Label>
+                  <Label>Вага матеріалу (г)</Label>
                   <Input
                     type="number"
                     min={0}
@@ -609,7 +640,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <Label>Waste %</Label>
+                  <Label>Відходи (%)</Label>
                   <Input
                     type="number"
                     min={0}
@@ -642,7 +673,7 @@ export default function ProjectsPage() {
                     }}
                   />
                   {values.stlPath && (
-                    <span className="text-sm text-slate-500">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
                       Stored: {values.stlPath}
                     </span>
                   )}
@@ -655,26 +686,26 @@ export default function ProjectsPage() {
                     }}
                   />
                 ) : (
-                  <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-slate-200 text-sm text-slate-400">
+                  <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-slate-200 text-sm text-slate-400 dark:border-slate-700 dark:text-slate-500">
                     Upload STL to preview
                   </div>
                 )}
                 <div className="grid gap-2 text-sm md:grid-cols-3">
                   <div>
                     <Label>X (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                       {values.stlXmm ?? "-"}
                     </div>
                   </div>
                   <div>
                     <Label>Y (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                       {values.stlYmm ?? "-"}
                     </div>
                   </div>
                   <div>
                     <Label>Z (mm)</Label>
-                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-700 dark:bg-slate-800">
                       {values.stlZmm ?? "-"}
                     </div>
                   </div>
@@ -692,7 +723,7 @@ export default function ProjectsPage() {
                   return (
                     <div
                       key={service.id}
-                      className="flex flex-wrap items-center gap-3 rounded-md border border-slate-100 px-3 py-2"
+                      className="flex flex-wrap items-center gap-3 rounded-md border border-slate-100 px-3 py-2 dark:border-slate-800"
                     >
                       <label className="flex items-center gap-2 text-sm">
                         <Checkbox
@@ -721,9 +752,9 @@ export default function ProjectsPage() {
                         />
                       )}
                       {service.usesTime && (
-                        <span className="text-xs text-slate-500">minutes</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">minutes</span>
                       )}
-                      <span className="ml-auto text-xs text-slate-500">
+                      <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">
                         Fixed: {service.fixedUah} грн
                       </span>
                     </div>
@@ -734,11 +765,11 @@ export default function ProjectsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Pricing</CardTitle>
+                <CardTitle>Ціноутворення</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label>Sale mode</Label>
+                  <Label>Режим продажу</Label>
                   <Select
                     value={values.saleMode}
                     onChange={(event) =>
@@ -748,13 +779,13 @@ export default function ProjectsPage() {
                       )
                     }
                   >
-                    <option value="markup">Markup</option>
-                    <option value="manual">Manual</option>
+                    <option value="markup">Націнка</option>
+                    <option value="manual">Вручну</option>
                   </Select>
                 </div>
                 {values.saleMode === "markup" ? (
                   <div>
-                    <Label>Markup %</Label>
+                    <Label>Націнка %</Label>
                     <Input
                       type="number"
                       min={-100}
@@ -767,7 +798,7 @@ export default function ProjectsPage() {
                   </div>
                 ) : (
                   <div>
-                    <Label>Manual sale price (грн)</Label>
+                    <Label>Ручна ціна продажу (грн)</Label>
                     <Input
                       type="number"
                       min={0}
@@ -788,73 +819,84 @@ export default function ProjectsPage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Results</CardTitle>
+                  <CardTitle>Результати</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span>Electricity</span>
-                    <span>
-                      {costs.electricityKwh} kWh · {Math.round(costs.electricityCost)} грн
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Material</span>
-                    <span>{Math.round(costs.materialCost)} грн</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Labor</span>
-                    <span>{Math.round(costs.laborCost)} грн</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Fixed services</span>
-                    <span>{Math.round(costs.fixedServicesCost)} грн</span>
-                  </div>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Наведіть курсор на рядок, щоб побачити формулу розрахунку.</p>
+                  <ResultRow
+                    label="Електрика"
+                    value={`${Math.round(costs.electricityCost)} грн`}
+                    hint={`Споживання принтера ${selectedPrinter?.powerWatts ?? 0} Вт × ${values.printTimeHours.toFixed(2)} год = ${costs.electricityKwh} кВт·год; далі × ${metadata?.settings?.electricityUahPerKwh ?? 0} грн/кВт·год.`}
+                  />
+                  <ResultRow
+                    label="Матеріал"
+                    value={`${Math.round(costs.materialCost)} грн`}
+                    hint={`(${values.materialGrams} г / 1000) × ${selectedMaterial?.priceUahPerKg ?? 0} грн/кг × (1 + ${values.wastePercent}% відходів).`}
+                  />
+                  <ResultRow
+                    label="Робота"
+                    value={`${Math.round(costs.laborCost)} грн`}
+                    hint={`Сума хвилин постобробки × ставка: ${(values.services.filter((service) => service.selected).reduce((total, service) => total + (service.timeMinutes ?? 0), 0)).toFixed(0)} хв × ${metadata?.settings?.laborUahPerHour ?? 0} грн/год.`}
+                  />
+                  <ResultRow
+                    label="Фіксовані послуги"
+                    value={`${Math.round(costs.fixedServicesCost)} грн`}
+                    hint="Сума фіксованих послуг, які увімкнені в блоці постобробки."
+                  />
                   {values.includePrinterAmort && (
-                    <div className="flex items-center justify-between">
-                      <span>Printer amort</span>
-                      <span>{Math.round(costs.printerAmortCost)} грн</span>
-                    </div>
+                    <ResultRow
+                      label="Амортизація принтера"
+                      value={`${Math.round(costs.printerAmortCost)} грн`}
+                      hint={`${values.printTimeHours.toFixed(2)} год × ${selectedPrinter?.amortUahPerHour ?? 0} грн/год.`}
+                    />
                   )}
                   {values.includePrinterService && (
-                    <div className="flex items-center justify-between">
-                      <span>Printer service</span>
-                      <span>{Math.round(costs.printerServiceCost)} грн</span>
-                    </div>
+                    <ResultRow
+                      label="Сервіс принтера"
+                      value={`${Math.round(costs.printerServiceCost)} грн`}
+                      hint={`${values.printTimeHours.toFixed(2)} год × ${selectedPrinter?.serviceUahPerHour ?? 0} грн/год.`}
+                    />
                   )}
-                  <div className="flex items-center justify-between font-semibold">
-                    <span>Post-processing total</span>
-                    <span>{Math.round(costs.postCost)} грн</span>
-                  </div>
-                  <div className="flex items-center justify-between text-base font-semibold">
-                    <span>COGS</span>
-                    <span>{Math.round(costs.cogs)} грн</span>
-                  </div>
-                  <div className="h-px bg-slate-200" />
-                  <div className="flex items-center justify-between">
-                    <span>Sale price</span>
-                    <span>{Math.round(pricing.salePrice)} грн</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Profit</span>
-                    <span>{Math.round(pricing.profit)} грн</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Margin %</span>
-                    <span>{pricing.marginPercent.toFixed(1)}%</span>
-                  </div>
+                  <ResultRow
+                    label="Постобробка разом"
+                    value={`${Math.round(costs.postCost)} грн`}
+                    hint="Робота + фіксовані послуги."
+                  />
+                  <ResultRow
+                    label="Повна собівартість"
+                    value={`${Math.round(costs.cogs)} грн`}
+                    hint="COGS (Cost of Goods Sold) = повна собівартість виробу: електрика + матеріал + постобробка + амортизація/сервіс принтера (якщо увімкнено)."
+                    emphasized
+                  />
+                  <div className="h-px bg-slate-200 dark:bg-slate-700" />
+                  <ResultRow
+                    label="Ціна продажу"
+                    value={`${Math.round(pricing.salePrice)} грн`}
+                    hint={values.saleMode === "markup" ? `Собівартість × (1 + ${values.markupPercent}%).` : "Задана вручну ціна продажу."}
+                  />
+                  <ResultRow
+                    label="Прибуток"
+                    value={`${Math.round(pricing.profit)} грн`}
+                    hint="Ціна продажу - собівартість."
+                  />
+                  <ResultRow
+                    label="Маржа %"
+                    value={`${pricing.marginPercent.toFixed(1)}%`}
+                    hint="(Прибуток / Ціна продажу) × 100%."
+                  />
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick actions</CardTitle>
+                  <CardTitle>Швидкі дії</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <Button variant="secondary" className="w-full" onClick={handleDuplicate}>
-                    Duplicate project
+                    Дублювати проєкт
                   </Button>
                   <Button variant="outline" className="w-full" onClick={handleNew}>
-                    Create new
+                    Створити новий
                   </Button>
                 </CardContent>
               </Card>

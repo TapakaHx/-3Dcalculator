@@ -83,15 +83,19 @@ function ResultRow({
   emphasized?: boolean;
 }) {
   return (
-    <div
-      className={`group flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 ${emphasized ? "text-base font-semibold" : ""}`}
-      title={hint}
-    >
-      <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200">
-        {label}
-        <Info className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-      </span>
-      <span>{value}</span>
+    <div className="group/row relative">
+      <div
+        className={`flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 ${emphasized ? "text-base font-semibold" : ""}`}
+      >
+        <span className="inline-flex items-center gap-1 text-slate-700 dark:text-slate-200">
+          {label}
+          <Info className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
+        </span>
+        <span>{value}</span>
+      </div>
+      <div className="pointer-events-none absolute -top-2 left-2 right-2 z-20 -translate-y-full rounded-md border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 opacity-0 shadow-md transition-opacity group-hover/row:opacity-100 group-focus-within/row:opacity-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+        {hint}
+      </div>
     </div>
   );
 }
@@ -226,7 +230,7 @@ export default function ProjectsPage() {
         })
       });
       setSaveStatus("saved");
-      toast.success("Project saved");
+      toast.success("Проєкт збережено");
       setTimeout(() => setSaveStatus("idle"), 2000);
       refreshList();
     }, 800);
@@ -248,12 +252,12 @@ export default function ProjectsPage() {
     const response = await fetch("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: "New project" })
+      body: JSON.stringify({ title: "Новий проєкт" })
     });
     const data = await response.json();
     await refreshList();
     setSelectedId(data.id);
-    toast.success("Project created");
+    toast.success("Проєкт створено");
   };
 
   const handleDuplicate = async () => {
@@ -264,15 +268,15 @@ export default function ProjectsPage() {
     const data = await response.json();
     await refreshList();
     setSelectedId(data.id);
-    toast.success("Project duplicated");
+    toast.success("Проєкт продубльовано");
   };
 
   const handleDelete = async () => {
     if (!selectedId) return;
-    const confirmed = window.confirm("Delete this project?");
+    const confirmed = window.confirm("Видалити цей проєкт?");
     if (!confirmed) return;
     await fetch(`/api/projects/${selectedId}`, { method: "DELETE" });
-    toast.success("Project deleted");
+    toast.success("Проєкт видалено");
     await refreshList();
     setSelectedId(null);
   };
@@ -360,7 +364,7 @@ export default function ProjectsPage() {
       form.setValue("stlYmm", dims.y);
       form.setValue("stlZmm", dims.z);
     }
-    toast.success("STL uploaded");
+    toast.success("STL файл завантажено");
     await refreshList();
   };
 
@@ -397,17 +401,17 @@ export default function ProjectsPage() {
 
   return (
     <AppShell
-      title="Projects"
-      description="Auto-save enabled · changes persist every 800ms."
+      title="Проєкти"
+      description="Автозбереження увімкнене · зміни зберігаються кожні 800 мс."
     >
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            Project list
+            Список проєктів
           </div>
           <div className="mt-3 flex gap-2">
             <Input
-              placeholder="Search project..."
+              placeholder="Пошук проєкту..."
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
@@ -438,28 +442,28 @@ export default function ProjectsPage() {
         <section className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="text-sm text-slate-500 dark:text-slate-400">Active project</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">Активний проєкт</div>
               <div className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {values.title || "Untitled"}
+                {values.title || "Без назви"}
               </div>
               <div className="text-xs text-slate-500 dark:text-slate-400">
-                Status:{" "}
+                Стан: 
                 {saveStatus === "saving"
-                  ? "Saving..."
+                  ? "Збереження..."
                   : saveStatus === "saved"
-                    ? "Saved"
-                    : "Idle"}
+                    ? "Збережено"
+                    : "Очікування"}
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button variant="secondary" onClick={handleNew}>
-                <FilePlus2 className="mr-2 h-4 w-4" /> New project
+                <FilePlus2 className="mr-2 h-4 w-4" /> Новий проєкт
               </Button>
               <Button variant="outline" onClick={handleDuplicate}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicate
+                <Copy className="mr-2 h-4 w-4" /> Дублювати
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                <Trash2 className="mr-2 h-4 w-4" /> Видалити
               </Button>
             </div>
           </div>
@@ -474,19 +478,19 @@ export default function ProjectsPage() {
             <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>General</CardTitle>
+                <CardTitle>Загальне</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Назва</Label>
                   <Input
                     id="title"
                     {...form.register("title")}
-                    placeholder="Project name"
+                    placeholder="Назва проєкту"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date">Дата</Label>
                   <Input
                     id="date"
                     type="date"
@@ -495,7 +499,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="qty">Qty</Label>
+                  <Label htmlFor="qty">Кількість</Label>
                   <Input
                     id="qty"
                     type="number"
@@ -507,7 +511,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="note">Note</Label>
+                  <Label htmlFor="note">Нотатка</Label>
                   <Textarea id="note" {...form.register("note")} />
                 </div>
               </CardContent>
@@ -761,11 +765,11 @@ export default function ProjectsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Pricing</CardTitle>
+                <CardTitle>Ціноутворення</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label>Sale mode</Label>
+                  <Label>Режим продажу</Label>
                   <Select
                     value={values.saleMode}
                     onChange={(event) =>
@@ -775,13 +779,13 @@ export default function ProjectsPage() {
                       )
                     }
                   >
-                    <option value="markup">Markup</option>
-                    <option value="manual">Manual</option>
+                    <option value="markup">Націнка</option>
+                    <option value="manual">Вручну</option>
                   </Select>
                 </div>
                 {values.saleMode === "markup" ? (
                   <div>
-                    <Label>Markup %</Label>
+                    <Label>Націнка %</Label>
                     <Input
                       type="number"
                       min={-100}
@@ -794,7 +798,7 @@ export default function ProjectsPage() {
                   </div>
                 ) : (
                   <div>
-                    <Label>Manual sale price (грн)</Label>
+                    <Label>Ручна ціна продажу (грн)</Label>
                     <Input
                       type="number"
                       min={0}
@@ -818,6 +822,7 @@ export default function ProjectsPage() {
                   <CardTitle>Результати</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Наведіть курсор на рядок, щоб побачити формулу розрахунку.</p>
                   <ResultRow
                     label="Електрика"
                     value={`${Math.round(costs.electricityCost)} грн`}
@@ -858,9 +863,9 @@ export default function ProjectsPage() {
                     hint="Робота + фіксовані послуги."
                   />
                   <ResultRow
-                    label="Собівартість (COGS)"
+                    label="Повна собівартість"
                     value={`${Math.round(costs.cogs)} грн`}
-                    hint="COGS (Cost of Goods Sold) — повна собівартість: електрика + матеріал + постобробка + додаткові витрати принтера."
+                    hint="COGS (Cost of Goods Sold) = повна собівартість виробу: електрика + матеріал + постобробка + амортизація/сервіс принтера (якщо увімкнено)."
                     emphasized
                   />
                   <div className="h-px bg-slate-200 dark:bg-slate-700" />
@@ -884,14 +889,14 @@ export default function ProjectsPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Quick actions</CardTitle>
+                  <CardTitle>Швидкі дії</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <Button variant="secondary" className="w-full" onClick={handleDuplicate}>
-                    Duplicate project
+                    Дублювати проєкт
                   </Button>
                   <Button variant="outline" className="w-full" onClick={handleNew}>
-                    Create new
+                    Створити новий
                   </Button>
                 </CardContent>
               </Card>

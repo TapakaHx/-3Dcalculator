@@ -8,12 +8,12 @@ export interface ButtonProps
 }
 
 const variants: Record<string, string> = {
-  default: "bg-slate-900 text-white hover:bg-slate-800",
+  default: "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200",
   outline:
-    "border border-slate-300 bg-white hover:bg-slate-100 text-slate-900",
-  ghost: "bg-transparent hover:bg-slate-100 text-slate-900",
+    "border border-slate-300 bg-white hover:bg-slate-100 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
+  ghost: "bg-transparent hover:bg-slate-100 text-slate-900 dark:text-slate-100 dark:hover:bg-slate-800",
   destructive: "bg-red-600 text-white hover:bg-red-500",
-  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200"
+  secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
 };
 
 const sizes: Record<string, string> = {
